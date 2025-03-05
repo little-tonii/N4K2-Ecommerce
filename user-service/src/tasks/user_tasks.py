@@ -8,6 +8,25 @@ from ..models.user_model import User
 class UserTasks:
     
     @classmethod
+    async def get_user_by_email_task(cls, async_session: AsyncSession, email: str) -> UserResponse:
+        statement = select(User).where(User.email == email)
+        result = await async_session.execute(statement)
+        user_model = result.scalars().first()
+        if not user_model:
+            raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
+        return UserResponse(
+            id=user_model.id,
+            email=user_model.email,
+            hashed_password=user_model.hashed_password,
+            refresh_token=user_model.refresh_token,
+            phone_number=user_model.phone_number,
+            address=user_model.address,
+            created_at=user_model.created_at,
+            updated_at=user_model.updated_at,
+            account_type=user_model.account_type
+        )
+    
+    @classmethod
     async def delete_user_by_id_task(cls, async_session: AsyncSession, id: int) -> None:
         statement = select(User).where(User.id == id)
         result = await async_session.execute(statement)
