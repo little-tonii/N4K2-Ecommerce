@@ -1,22 +1,19 @@
-
-from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from fastapi.concurrency import asynccontextmanager
 from fastapi.exceptions import RequestValidationError
-from .configs.exception_handler import global_exception_handler, http_exception_handler, validation_exception_handler
-from pydantic import ValidationError
-from .configs.database import engine, init_db
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import user_router
+from pydantic import ValidationError
+from .configs.exception_handler import global_exception_handler, http_exception_handler, validation_exception_handler
+from .configs.database import client
+from .routers import category_router, product_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        await init_db()
-        yield
-    finally:
-        await engine.dispose()
+    yield
+    if client:
+        client.close()
 
-app = FastAPI(lifespan=lifespan, title="User Service")
+app = FastAPI(title="Product Service", lifespan=lifespan)
 
 origins = [
     "*"
@@ -30,7 +27,8 @@ app.add_middleware(
     allow_headers=["*"], 
 )
 
-app.include_router(user_router.router)
+app.include_router(category_router.router)
+app.include_router(product_router.router)
 
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(ValidationError, validation_exception_handler)

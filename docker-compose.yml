@@ -27,7 +27,7 @@ services:
     volumes:
       - mongo_data:/data/db
     environment:
-      MONGO_INITDB_DATABASE: items_db
+      MONGO_INITDB_DATABASE: products_db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh --quiet
       interval: 10s
@@ -66,19 +66,20 @@ services:
     volumes:
       - ./user-service:/app
 
-  # product_service:
-  #   build: ./product-service
-  #   container_name: product_service_container
-  #   restart: unless-stopped
-  #   ports:
-  #     - "10005:8000"
-  #   depends_on:
-  #     mongo_db:
-  #       condition: service_healthy
-  #   environment:
-  #     DATABASE_URL: mongodb://mongo_db:27017/items_db
-  #   volumes:
-  #     - ./product-service:/app
+  product_service:
+    build: ./product-service
+    container_name: product_service_container
+    restart: unless-stopped
+    ports:
+      - "10005:8000"
+    depends_on:
+      mongo_db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mongodb://mongo_db:27017
+      DATABASE_NAME: products_db
+    volumes:
+      - ./product-service:/app
 
   # gateway:
   #   build: ./gateway
