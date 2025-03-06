@@ -11,7 +11,7 @@ from ..schemas.requests.user_request_schema import UserChangePasswordRequest, Us
 
 from ..services.user_service import UserService
 
-from ..schemas.responses.user_response_schema import UserAccessTokenResponse, UserLoginResponse
+from ..schemas.responses.user_response_schema import UserAccessTokenResponse, UserLoginResponse, UserInfoResponse
 
 router = APIRouter(prefix='/user', tags=['User'])
 
@@ -25,4 +25,8 @@ async def refresh_token(request: UserRefreshTokenRequest):
 
 @router.post(path="/change-password", status_code=status.HTTP_200_OK)
 async def change_password(claims: Annotated[TokenClaims, Depends(verify_access_token)], request: UserChangePasswordRequest):
-    return await UserService.change_user_password(user_id=claims.id, new_password=request.new_password, old_password=request.old_password) 
+    return await UserService.change_user_password(user_id=claims.id, new_password=request.new_password, old_password=request.old_password)
+
+@router.get(path="/user-info", status_code=status.HTTP_200_OK, response_model=UserInfoResponse)
+async def user_info(claims: Annotated[TokenClaims, Depends(verify_access_token)]):
+    return await UserService.get_user_info(user_id=claims.id)
