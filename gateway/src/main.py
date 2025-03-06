@@ -1,30 +1,30 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.concurrency import asynccontextmanager
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
+
+from .routers import customer_router
+
 from .configs.exception_handler import global_exception_handler, http_exception_handler, validation_exception_handler
-from .configs.database import client
-from .routers import category_router, product_router
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    yield
-    if client:
-        client.close()
+app = FastAPI(title="Ecommerce API")
 
-app = FastAPI(title="Product Service", lifespan=lifespan)
+origins = [
+    "*"
+]
 
 app.add_middleware(
     middleware_class=CORSMiddleware,
-    allow_origins=[],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"], 
+    allow_headers=["*"],
 )
 
-app.include_router(category_router.router)
-app.include_router(product_router.router)
+app.mount("/public/images", StaticFiles(directory="public/images"), name="images")
+
+app.include_router(router=customer_router.router)
 
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(ValidationError, validation_exception_handler)

@@ -81,21 +81,21 @@ services:
     volumes:
       - ./product-service:/app
 
-  # gateway:
-  #   build: ./gateway
-  #   container_name: gateway_container
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8000:8000"
-  #   # depends_on:
-  #   #   - customer_service
-  #   environment:
-  #     SECRET_KEY: secret_key
-  #     HASH_ALGORITHM: HS256
-  #     ACCESS_TOKEN_EXPIRES: 1440
-  #     REFRESH_TOKEN_EXPIRES: 10080
-  #   volumes:
-  #     - ./gateway:/app
+  gateway:
+    build: ./gateway
+    container_name: gateway_container
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: secret_key
+      HASH_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRES: 1440
+      REFRESH_TOKEN_EXPIRES: 10080
+      USER_SERVICE_URL: http://user_service:8000
+      PRODUCT_SERVICE_URL: http://product_service:8000
+    volumes:
+      - ./gateway:/app
 
 volumes:
   mysql_data:
