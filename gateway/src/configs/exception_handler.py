@@ -39,5 +39,5 @@ async def validation_exception_handler(request: Request, exc: ValidationError | 
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500, 
-        content=ErrorResponse(message="Có lỗi xảy ra").model_dump()
+        content=ErrorResponse(message=f"Có lỗi xảy ra").model_dump()
     )

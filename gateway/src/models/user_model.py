@@ -16,3 +16,6 @@ class UserModel(BaseModel):
     created_at: datetime
     updated_at: datetime
     account_type: str
+    
+    class Config:
+        arbitrary_types_allowed = True
