@@ -25,4 +25,4 @@ async def refresh_token(request: UserRefreshTokenRequest):
 
 @router.post(path="/change-password", status_code=status.HTTP_200_OK)
 async def change_password(claims: Annotated[TokenClaims, Depends(verify_access_token)], request: UserChangePasswordRequest):
-    return await UserService.change_user_password(user_id=claims.id, new_password=request.new_password, old_password=request.old_password)
+    return await UserService.change_user_password(user_id=claims.id, new_password=request.new_password, old_password=request.old_password) 

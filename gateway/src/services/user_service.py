@@ -62,15 +62,15 @@ class UserService:
             response = await client.get(f"{USER_SERVICE_URL}/user/?id={user_id}")
             if response.status_code == status.HTTP_200_OK:
                 return UserModel(
-                    id=response.json()["id"],
-                    email=response.json()["email"],
-                    hashed_password=response.json()["hashed_password"],
-                    refresh_token=response.json()["refresh_token"],
-                    phone_number=response.json()["phone_number"],
-                    address=response.json()["address"],
-                    created_at=pendulum.parse(response.json()["created_at"]),
-                    updated_at=pendulum.parse(response.json()["updated_at"]),
-                    account_type=response.json()["account_type"]
+                    id=response.json().get("id"),
+                    email=response.json().get("email"),
+                    hashed_password=response.json().get("hashed_password"),
+                    refresh_token=response.json().get("refresh_token"),
+                    phone_number=response.json().get("phone_number"),
+                    address=response.json().get("address"),
+                    created_at=pendulum.parse(response.json().get("created_at")),
+                    updated_at=pendulum.parse(response.json().get("updated_at")),
+                    account_type=response.json().get("account_type")
                 )
             elif response.status_code == status.HTTP_404_NOT_FOUND:
                 return None

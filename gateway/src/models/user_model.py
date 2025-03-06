@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -11,11 +11,8 @@ class UserModel(BaseModel):
     email: str
     hashed_password: str
     refresh_token: str
-    phone_number: str
-    address: str
+    phone_number: str | None
+    address: str | None
     created_at: datetime
     updated_at: datetime
     account_type: str
-    
-    class Config:
-        arbitrary_types_allowed = True

@@ -16,13 +16,13 @@ async def verify_access_token(token: Annotated[OAuth2PasswordBearer, Depends(oau
         payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[HASH_ALGORITHM])
         user_id: int = payload.get(TokenKey.ID)
         expires: int = payload.get(TokenKey.EXPIRES)
+        account_type: str = payload.get(TokenKey.ACCOUNT_TYPE)
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token không hợp lệ')
         if expires and datetime.now(timezone.utc).timestamp() > expires:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token không hợp lệ')
-        user_response = await UserService.get_user_by_id(user_id=user_id)
-        if user_response is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token không hợp lệ')    
-        return TokenClaims(id=user_id, account_type=user_response.account_type)
+        if await UserService.get_user_by_id(user_id=user_id) is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token không hợp lệ')
+        return TokenClaims(id=user_id, account_type=account_type)
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token không hợp lệ')

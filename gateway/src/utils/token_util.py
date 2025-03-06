@@ -16,9 +16,9 @@ class TokenClaims:
     id: int
     account_type: str
     
-    def __init__(self, id: str, account_type: str):
-        self.account_type = account_type
+    def __init__(self, id: int, account_type: str):
         self.id = id
+        self.account_type = account_type
 
 def create_access_token(user_id: int, account_type: str) -> str:
     encode = { TokenKey.ID: user_id, TokenKey.ACCOUNT_TYPE: account_type }
