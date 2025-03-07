@@ -4,6 +4,7 @@ from sqlalchemy import select
 from ..schemas.user_response_schema import UserResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.user_model import User
+from sqlalchemy.exc import IntegrityError
 
 class UserTasks:
     
@@ -64,8 +65,12 @@ class UserTasks:
             raise HTTPException(status_code=400, detail="Email đã được sử dụng")
         new_user = User(email=email, hashed_password=hashed_password)
         async_session.add(new_user)
-        await async_session.commit()
-        await async_session.refresh(new_user)
+        try:
+            await async_session.commit()
+            await async_session.refresh(new_user)
+        except IntegrityError:
+            await async_session.rollback()
+            raise HTTPException(status_code=400, detail="Email đã được sử dụng")
         return UserResponse(
             id=new_user.id,
             email=new_user.email,
