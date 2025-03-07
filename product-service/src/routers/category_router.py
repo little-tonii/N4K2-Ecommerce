@@ -5,7 +5,7 @@ from starlette import status
 from ..schemas.category_request_schema import CreateCategoryRequest, UpdateCategoryRequest
 from ..tasks.category_tasks import CategoryTasks
 
-router = APIRouter(prefix="/categories", tags=["Category"])
+router = APIRouter(prefix="/category", tags=["Category"])
 
 @router.post("/", response_model=CategoryResponse, status_code=status.HTTP_200_OK)
 async def create_category(request: CreateCategoryRequest):
