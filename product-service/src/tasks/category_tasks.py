@@ -10,7 +10,7 @@ class CategoryTasks:
     
     @classmethod
     async def create_category_task(cls, name: str)-> CategoryResponse:
-        new_category = CategoryModel(name=name)
+        new_category = CategoryModel(name=name, created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
         category_data = new_category.model_dump(exclude_unset=True, exclude={"id"})
         result = await category_collection.insert_one(category_data)
         new_category.id = result.inserted_id
@@ -28,8 +28,8 @@ class CategoryTasks:
             categories.append(CategoryResponse(
                 id=str(category["_id"]),
                 name=category["name"],
-                created_at=category.get("created_at", datetime.now(timezone.utc)),
-                updated_at=category.get("updated_at", datetime.now(timezone.utc))
+                created_at=category.get("created_at"),
+                updated_at=category.get("updated_at")
             ))
         return categories
 
@@ -41,8 +41,8 @@ class CategoryTasks:
         return CategoryResponse(
             id=str(category["_id"]),
             name=category["name"],
-            created_at=category.get("created_at", datetime.now(timezone.utc)),
-            updated_at=category.get("updated_at", datetime.now(timezone.utc))
+            created_at=category.get("created_at"),
+            updated_at=category.get("updated_at")
         )
         
     @classmethod
@@ -61,8 +61,8 @@ class CategoryTasks:
         return CategoryResponse(
             id=str(updated_category["_id"]),
             name=updated_category["name"],
-            created_at=updated_category.get("created_at", datetime.now(timezone.utc)),
-            updated_at=updated_category.get("updated_at", datetime.now(timezone.utc))
+            created_at=updated_category.get("created_at"),
+            updated_at=updated_category.get("updated_at")
         )
     
     @classmethod
