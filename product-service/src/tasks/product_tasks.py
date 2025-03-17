@@ -70,3 +70,10 @@ class ProductTasks:
             created_at=product["created_at"],
             updated_at=product["updated_at"]
         )
+        
+    @classmethod
+    async def delete_product_by_id_task(cls, id: str) -> None:
+        deleted_product = await product_collection.find_one_and_delete({"_id": ObjectId(id)})
+        if not deleted_product:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sản phẩm không tồn tại")
+        return None

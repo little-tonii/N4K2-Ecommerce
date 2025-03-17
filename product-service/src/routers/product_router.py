@@ -24,3 +24,7 @@ async def get_products():
 @router.get(path="/{id}", status_code=status.HTTP_200_OK, response_model=ProductResponse)
 async def get_product_by_id(id: str):
     return await ProductTasks.get_product_by_id_task(id=id)
+
+@router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product_by_id(id: str):
+    return await ProductTasks.delete_product_by_id_task(id=id)

@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from ..schemas.category_response_schema import CategoryResponse
 from ..configs.database import category_collection
 from ..models.category_model import CategoryModel 
+from starlette import status
 
 class CategoryTasks:
     
@@ -37,7 +38,7 @@ class CategoryTasks:
     async def get_category_by_id_task(cls, id: str)-> CategoryResponse:
         category = await category_collection.find_one({"_id": ObjectId(id)})
         if not category:
-            raise HTTPException(status_code=404, detail="Danh mục không tồn tại")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Danh mục không tồn tại")
         return CategoryResponse(
             id=str(category["_id"]),
             name=category["name"],
@@ -57,7 +58,7 @@ class CategoryTasks:
             return_document=True
         )
         if not updated_category:
-            raise HTTPException(status_code=404, detail="Danh mục không tồn tại")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Danh mục không tồn tại")
         return CategoryResponse(
             id=str(updated_category["_id"]),
             name=updated_category["name"],
@@ -69,5 +70,5 @@ class CategoryTasks:
     async def delete_category_task(cls, id: str) -> None:
         deleted_category = await category_collection.find_one_and_delete({"_id": ObjectId(id)})
         if not deleted_category:
-            raise HTTPException(status_code=404, detail="Danh mục không tồn tại")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Danh mục không tồn tại")
         return None
