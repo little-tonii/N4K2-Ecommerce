@@ -81,6 +81,21 @@ services:
     volumes:
       - ./product-service:/app
 
+  cart_service:
+    build: ./cart-service
+    container_name: cart_service_container
+    restart: unless-stopped
+    ports:
+      - "10006:8000"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://user:123456@postgres_db:5432/orders_db
+      DATABASE_NAME: orders_db
+    volumes:
+      - ./cart-service:/app
+
   gateway:
     build: ./gateway
     container_name: gateway_container
