@@ -1,5 +1,12 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Enum, Integer, String
 from ..configs.database import Base
+import enum
+
+class OrderStatus(enum.Enum):
+    PENDING = "pending"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELED = "canceled"
 
 class OrderModel(Base):
     __tablename__ = "orders"
@@ -10,3 +17,4 @@ class OrderModel(Base):
     phone_number: str = Column(String, nullable=False)
     address: str = Column(String, nullable=False)
     full_name: str = Column(String, nullable=False)
+    status: str = Column(Enum(OrderStatus), nullable=False, default=OrderStatus.PENDING)
