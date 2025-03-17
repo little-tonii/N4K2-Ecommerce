@@ -77,3 +77,36 @@ class ProductTasks:
         if not deleted_product:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sản phẩm không tồn tại")
         return None
+    
+    @classmethod
+    async def update_product_by_id_task(cls, id: str, name: str | None, price: int | None, description: str | None, category_id: str | None, image_url: str | None) -> ProductResponse:
+        updated_at = datetime.now(timezone.utc)
+        update_fields = { 
+            key: value for key, value in {
+                "name": name,
+                "price": price,
+                "description": description,
+                "category_id": category_id,
+                "image_url": image_url,
+                "updated_at": updated_at
+            }.items() if value is not None
+        }
+        if not update_fields:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Vui lòng nhập thông tin cần cập nhật")
+        updated_product = await product_collection.find_one_and_update(
+            {"_id": ObjectId(id)},
+            {"$set": update_fields},
+            return_document=True
+        )
+        if not updated_product:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sản phẩm không tồn tại")
+        return ProductResponse(
+            id=str(updated_product["_id"]),
+            name=updated_product["name"],
+            price=updated_product["price"],
+            description=updated_product["description"],
+            category_id=updated_product["category_id"],
+            image_url=updated_product["image_url"],
+            created_at=updated_product["created_at"],
+            updated_at=updated_product["updated_at"]
+        )
