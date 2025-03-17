@@ -15,12 +15,12 @@ async def add_product_to_cart(async_session: Annotated[AsyncSession, Depends(get
 
 @router.delete(path="/product", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_product_from_cart(async_session: Annotated[AsyncSession, Depends(get_db)], request: RemoveProductFromCartRequest):
-    await CartTasks.remove_product_from_cart(async_session=async_session, user_id=request.user_id, product_id=request.product_id)
+    await CartTasks.remove_product_from_cart_task(async_session=async_session, user_id=request.user_id, product_id=request.product_id)
     
 @router.get(path="/{user_id}", status_code=status.HTTP_200_OK, response_model=GetProductsInCartResponse)
 async def get_products_in_cart(async_session: Annotated[AsyncSession, Depends(get_db)], user_id: int):
-    return await CartTasks.get_products_in_cart(async_session=async_session, user_id=user_id)
+    return await CartTasks.get_products_in_cart_task(async_session=async_session, user_id=user_id)
 
 @router.post(path="/checkout", status_code=status.HTTP_201_CREATED, response_model=CheckOutCartResponse)
 async def checkout(async_session: Annotated[AsyncSession, Depends(get_db)], request: CheckoutCartRequest):
-    return await CartTasks.checkout_cart(async_session=async_session, user_id=request.user_id, phone_number=request.phone_number, address=request.address, full_name=request.full_name)
+    return await CartTasks.checkout_cart_task(async_session=async_session, user_id=request.user_id, phone_number=request.phone_number, address=request.address, full_name=request.full_name)

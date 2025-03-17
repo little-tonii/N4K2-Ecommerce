@@ -40,7 +40,7 @@ class CartTasks:
         
             
     @classmethod 
-    async def remove_product_from_cart(cls, async_session: AsyncSession, user_id: int, product_id: str) -> None:
+    async def remove_product_from_cart_task(cls, async_session: AsyncSession, user_id: int, product_id: str) -> None:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
         cart_query_result = await async_session.execute(cart_query)
         cart = cart_query_result.scalar()
@@ -55,7 +55,7 @@ class CartTasks:
         await async_session.commit()
         
     @classmethod
-    async def get_products_in_cart(cls, async_session: AsyncSession, user_id: int) -> GetProductsInCartResponse:
+    async def get_products_in_cart_task(cls, async_session: AsyncSession, user_id: int) -> GetProductsInCartResponse:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
         cart_query_result = await async_session.execute(cart_query)
         cart = cart_query_result.scalar()
@@ -72,7 +72,7 @@ class CartTasks:
         )
         
     @classmethod
-    async def checkout_cart(cls, async_session: AsyncSession, user_id: int, phone_number: str, address: str, full_name: str) -> CheckOutCartResponse:
+    async def checkout_cart_task(cls, async_session: AsyncSession, user_id: int, phone_number: str, address: str, full_name: str) -> CheckOutCartResponse:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
         cart_query_result = await async_session.execute(cart_query)
         cart = cart_query_result.scalar()
