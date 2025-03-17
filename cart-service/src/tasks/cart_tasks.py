@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.cart_model import CartModel
 from ..models.product_cart_model import ProductCartModel
-from ..schemas.cart_response_schema import AddProductToCartResponse, GetProductsInCartResponse
+from ..schemas.cart_response_schema import AddProductToCartResponse, GetProductsInCartResponse, ProductInCart
 from starlette import status
 
 class CartTasks:
@@ -52,5 +52,18 @@ class CartTasks:
         await async_session.commit()
         
     @classmethod
-    async def get_products_in_cart(async_session: AsyncSession, user_id: int) -> GetProductsInCartResponse:
-        pass
+    async def get_products_in_cart(cls, async_session: AsyncSession, user_id: int) -> GetProductsInCartResponse:
+        cart_query = select(CartModel).where(CartModel.user_id == user_id)
+        cart_query_result = await async_session.execute(cart_query)
+        cart = cart_query_result.scalar()
+        if not cart:
+            return GetProductsInCartResponse(products=[])
+        product_query = select(ProductCartModel).where(ProductCartModel.cart_id == cart.id)
+        product_query_result = await async_session.execute(product_query)
+        products = product_query_result.scalars().all()
+        return GetProductsInCartResponse(
+            products=[
+                ProductInCart(product_id=product.product_id, quantity=product.quantity) 
+                for product in products
+            ]
+        )
