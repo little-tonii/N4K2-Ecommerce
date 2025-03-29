@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
-from .routers import customer_router, user_router, category_router
+from .routers import customer_router, user_router, category_router, product_router
 
 from .configs.exception_handler import global_exception_handler, http_exception_handler, validation_exception_handler
 
@@ -27,6 +27,7 @@ app.mount("/public/images", StaticFiles(directory="public/images"), name="images
 app.include_router(router=user_router.router)
 app.include_router(router=customer_router.router)
 app.include_router(router=category_router.router)
+app.include_router(router=product_router.router)
 
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(ValidationError, validation_exception_handler)

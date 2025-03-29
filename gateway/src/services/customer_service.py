@@ -3,14 +3,15 @@ from fastapi import HTTPException
 import httpx
 import pendulum
 from starlette import status
-
+from datetime import datetime
 from ..models.user_model import AccountType
 from ..configs.variables import USER_SERVICE_URL
 from ..schemas.responses.customer_response_schema import CustomerRegisterResposne, CustomerUpdateInfoResponse
 from ..services.user_service import bcrypt_context
+from typing import cast
 
 class CustomerService:
-    
+
     @classmethod
     async def update_customer_info(cls, customer_id: int, phone_number: Optional[str], address: Optional[str], account_type: str) -> CustomerUpdateInfoResponse:
         try:
@@ -31,8 +32,8 @@ class CustomerService:
                         email=response.json().get('email'),
                         phone_number=response.json().get('phone_number'),
                         address=response.json().get('address'),
-                        created_at=pendulum.parse(response.json()["created_at"]),
-                        updated_at=pendulum.parse(response.json()["updated_at"]),
+                        created_at=cast(datetime, pendulum.parse(response.json()["created_at"])),
+                        updated_at=cast(datetime, pendulum.parse(response.json()["updated_at"])),
                         account_type=response.json().get('account_type')
                     )
         except httpx.HTTPStatusError as e:
@@ -42,7 +43,7 @@ class CustomerService:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ người dùng')
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ người dùng không khả dụng')
-    
+
     @classmethod
     async def register_customer(cls, email: str, password: str) -> CustomerRegisterResposne:
         try:
@@ -55,8 +56,8 @@ class CustomerService:
                         email=response.json().get('email'),
                         phone_number=response.json().get('phone_number'),
                         address=response.json().get('address'),
-                        created_at=pendulum.parse(response.json()["created_at"]),
-                        updated_at=pendulum.parse(response.json()["updated_at"]),
+                        created_at=cast(datetime, pendulum.parse(response.json()["created_at"])),
+                        updated_at=cast(datetime, pendulum.parse(response.json()["updated_at"])),
                         account_type=response.json().get('account_type')
                     )
         except httpx.HTTPStatusError as e:

@@ -10,11 +10,12 @@ from ..configs.variables import USER_SERVICE_URL
 import httpx
 from starlette import status
 from passlib.context import CryptContext
+from typing import cast
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 class UserService:
-    
+
     @classmethod
     async def get_user_info(cls, user_id: int) -> UserInfoResponse:
         try:
@@ -26,8 +27,8 @@ class UserService:
                     email=response.json().get("email"),
                     phone_number=response.json().get("phone_number"),
                     address=response.json().get("address"),
-                    created_at=pendulum.parse(response.json().get("created_at")),
-                    updated_at=pendulum.parse(response.json().get("updated_at")),
+                    created_at=cast(datetime, pendulum.parse(response.json().get("created_at"))),
+                    updated_at=cast(datetime, pendulum.parse(response.json().get("created_at"))),
                     account_type=response.json().get("account_type")
                 )
         except httpx.HTTPStatusError as e:
@@ -37,7 +38,7 @@ class UserService:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Có lỗi xảy ra phía dịch vụ người dùng")
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ người dùng không khả dụng')
-    
+
     @classmethod
     async def change_user_password(cls, user_id: int, new_password: str, old_password: str) -> str:
         try:
@@ -58,7 +59,7 @@ class UserService:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Có lỗi xảy ra phía dịch vụ người dùng")
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ người dùng không khả dụng')
-    
+
     @classmethod
     async def get_access_token(cls, refresh_token: str) -> UserAccessTokenResponse:
         try:
@@ -78,7 +79,7 @@ class UserService:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Có lỗi xảy ra phía dịch vụ người dùng")
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ người dùng không khả dụng')
-                        
+
     @classmethod
     async def get_user_by_id(cls, user_id: int) -> UserModel | None:
         try:
@@ -92,8 +93,8 @@ class UserService:
                     refresh_token=response.json().get("refresh_token"),
                     phone_number=response.json().get("phone_number"),
                     address=response.json().get("address"),
-                    created_at=pendulum.parse(response.json().get("created_at")),
-                    updated_at=pendulum.parse(response.json().get("updated_at")),
+                    created_at=cast(datetime, pendulum.parse(response.json().get("created_at"))),
+                    updated_at=cast(datetime, pendulum.parse(response.json().get("updated_at"))),
                     account_type=response.json().get("account_type")
                 )
         except httpx.HTTPStatusError as e:
@@ -103,7 +104,7 @@ class UserService:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Có lỗi xảy ra phía dịch vụ người dùng")
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ người dùng không khả dụng')
-    
+
     @classmethod
     async def login_user(cls, email: str, password: str) -> UserLoginResponse:
         try:

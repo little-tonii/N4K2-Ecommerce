@@ -1,0 +1,16 @@
+from pydantic import BaseModel
+from datetime import datetime
+from typing import List
+
+class GetProductResponse(BaseModel):
+    id: str
+    name: str
+    price: int
+    description: str
+    category_id: str
+    image_url: str
+    created_at: datetime
+    updated_at: datetime
+
+class GetProductsResponse(BaseModel):
+    products: List[GetProductResponse]
