@@ -11,8 +11,14 @@ class GetCategoryResponse(BaseModel):
 
 class GetAllCategoryResponse(BaseModel):
     categories: list[GetCategoryResponse]
-    
+
 class CreateCategoryResponse(BaseModel):
+    id: str
+    name: str
+    created_at: datetime
+    updated_at: datetime
+
+class UpdateCategoryResponse(BaseModel):
     id: str
     name: str
     created_at: datetime

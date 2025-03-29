@@ -6,7 +6,7 @@ from datetime import datetime
 from ..models.user_model import AccountType
 
 from ..configs.variables import PRODUCT_SERVICE_URL
-from ..schemas.responses.category_response_schema import CreateCategoryResponse, GetAllCategoryResponse, GetCategoryResponse
+from ..schemas.responses.category_response_schema import CreateCategoryResponse, GetAllCategoryResponse, GetCategoryResponse, UpdateCategoryResponse
 from typing import cast
 
 class CategoryService:
@@ -50,6 +50,29 @@ class CategoryService:
                     updated_at=updated_at
                 )
         except httpx.HTTPStatusError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Có lỗi xảy ra phía dịch vụ sản phẩm")
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ sản phẩm không khả dụng')
+
+    @classmethod
+    async def update_category(cls, account_type: str, id: str, name: str) -> UpdateCategoryResponse:
+        if account_type != AccountType.ADMIN:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập")
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.put(f"{PRODUCT_SERVICE_URL}/category/{id}", json={ "name": name })
+                response.raise_for_status()
+                updated_at = cast(datetime, pendulum.parse(response.json()["updated_at"]))
+                created_at = cast(datetime, pendulum.parse(response.json()["created_at"]))
+                return UpdateCategoryResponse(
+                    id=response.json()["id"],
+                    name=response.json()["name"],
+                    updated_at=updated_at,
+                    created_at=created_at
+                )
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == status.HTTP_404_NOT_FOUND:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Danh mục không tồn tại")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Có lỗi xảy ra phía dịch vụ sản phẩm")
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ sản phẩm không khả dụng')
