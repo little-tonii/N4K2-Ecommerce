@@ -1,2 +1,8 @@
 __pycache__/
 venv/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.webm
