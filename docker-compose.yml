@@ -109,6 +109,7 @@ services:
       REFRESH_TOKEN_EXPIRES: 10080
       USER_SERVICE_URL: http://user_service:8000
       PRODUCT_SERVICE_URL: http://product_service:8000
+      CART_SERVICE_URL: http://cart_service:8000
     volumes:
       - ./gateway:/app
 
