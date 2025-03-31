@@ -9,6 +9,8 @@ from ..configs.variables import USER_SERVICE_URL
 from ..schemas.responses.customer_response_schema import CustomerRegisterResposne, CustomerUpdateInfoResponse
 from ..services.user_service import bcrypt_context
 from typing import cast
+from ..schemas.responses.cart_response_schema import AddProductToCartResponse
+from ..configs.variables import PRODUCT_SERVICE_URL, CART_SERVICE_URL
 
 class CustomerService:
 
@@ -67,3 +69,39 @@ class CustomerService:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ người dùng')
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ người dùng không khả dụng')
+
+    @classmethod
+    async def add_product_to_cart(cls, user_id: int, account_type: str, product_id: str, quantity: int) -> AddProductToCartResponse:
+        if account_type != AccountType.CUSTOMER:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bạn không phải là khách hàng")
+        try:
+            async with httpx.AsyncClient() as client:
+                product_response = await client.get(f"{PRODUCT_SERVICE_URL}/product/{product_id}")
+                product_response.raise_for_status()
+                product = product_response.json()
+                product_price = product.get("price")
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == status.HTTP_404_NOT_FOUND:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sản phẩm không tồn tại")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ sản phẩm')
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+            raise HTTPException(status_code=500, detail="Dịch vụ sản phẩm không khả dụng")
+        try:
+            async with httpx.AsyncClient() as client:
+                cart_response = await client.post(f"{CART_SERVICE_URL}/cart/product", json={
+                    "user_id": user_id,
+                    "product_id": product_id,
+                    "quantity": quantity,
+                    "price": product_price
+                })
+                cart_response.raise_for_status()
+                added_item = cart_response.json()
+                return AddProductToCartResponse(
+                    product_id=added_item["product_id"],
+                    quantity=added_item["quantity"],
+                    price=added_item["price"]
+                )
+        except httpx.HTTPStatusError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ giỏ hàng')
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+            raise HTTPException(status_code=500, detail="Dịch vụ giỏ hàng không khả dụng")
