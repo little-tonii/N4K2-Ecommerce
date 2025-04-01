@@ -13,10 +13,10 @@ router = APIRouter(prefix="/cart", tags=["Cart"])
 async def add_product_to_cart(async_session: Annotated[AsyncSession, Depends(get_db)], request: AddProductToCartRequest):
     return await CartTasks.add_product_to_cart_task(async_session=async_session, user_id=request.user_id, product_id=request.product_id, quantity=request.quantity, price=request.price)
 
-@router.delete(path="/product", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_product_from_cart(async_session: Annotated[AsyncSession, Depends(get_db)], request: RemoveProductFromCartRequest):
-    await CartTasks.remove_product_from_cart_task(async_session=async_session, user_id=request.user_id, product_id=request.product_id)
-    
+@router.delete(path="/product/{user_id}&{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_product_from_cart(async_session: Annotated[AsyncSession, Depends(get_db)], user_id: int, product_id: str):
+    await CartTasks.remove_product_from_cart_task(async_session=async_session, user_id=user_id, product_id=product_id)
+
 @router.get(path="/{user_id}", status_code=status.HTTP_200_OK, response_model=GetProductsInCartResponse)
 async def get_products_in_cart(async_session: Annotated[AsyncSession, Depends(get_db)], user_id: int):
     return await CartTasks.get_products_in_cart_task(async_session=async_session, user_id=user_id)
