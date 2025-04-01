@@ -28,3 +28,29 @@ class RemoveProductFromCartRequest(BaseModel):
         if not value.strip():
             raise ValueError("ID sản phẩm không được để trống")
         return value
+
+class CheckoutCartRequest(BaseModel):
+    full_name: str
+    phone_number: str
+    address: str
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, value: str):
+        if not value.strip():
+            raise ValueError("Tên khách hàng không được để trống")
+        return value
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone_number(cls, value: str):
+        if not value.strip():
+            raise ValueError("Số điện thoại không được để trống")
+        return value
+
+    @field_validator("address")
+    @classmethod
+    def validate_address(cls, value: str):
+        if not value.strip():
+            raise ValueError("Địa chỉ không được để trống")
+        return value

@@ -12,3 +12,12 @@ class ProductInCart(BaseModel):
 
 class CartResponse(BaseModel):
     products: list[ProductInCart]
+
+class CartCheckoutResponse(BaseModel):
+    id: int
+    total_price: int
+    phone_number: str
+    address: str
+    status: str
+    full_name: str
+    products: list[ProductInCart]

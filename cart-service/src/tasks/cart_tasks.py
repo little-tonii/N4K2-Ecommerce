@@ -121,5 +121,12 @@ class CartTasks:
             address=new_order.address,
             full_name=new_order.full_name,
             status=new_order.status,
-            products=[p["product_id"] for p in product_list]
+            products=[
+                ProductInCart(
+                    product_id=item.product_id,
+                    quantity=item.quantity,
+                    price=item.price
+                )
+                for item in products_in_cart
+            ]
         )

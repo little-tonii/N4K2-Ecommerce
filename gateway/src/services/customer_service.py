@@ -9,7 +9,7 @@ from ..configs.variables import USER_SERVICE_URL
 from ..schemas.responses.customer_response_schema import CustomerRegisterResposne, CustomerUpdateInfoResponse
 from ..services.user_service import bcrypt_context
 from typing import cast
-from ..schemas.responses.cart_response_schema import ProductInCart, CartResponse, AddProductToCartResponse
+from ..schemas.responses.cart_response_schema import CartCheckoutResponse, ProductInCart, CartResponse, AddProductToCartResponse
 from ..configs.variables import PRODUCT_SERVICE_URL, CART_SERVICE_URL
 
 class CustomerService:
@@ -140,6 +140,42 @@ class CustomerService:
         except httpx.HTTPStatusError as e:
             if e.response.status_code == status.HTTP_400_BAD_REQUEST:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Sản phẩm không tồn tại trong giỏ hàng')
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ giỏ hàng')
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+            raise HTTPException(status_code=500, detail="Dịch vụ giỏ hàng không khả dụng")
+
+    @classmethod
+    async def check_out_cart(cls, user_id: int, account_type: str, full_name: str, phone_number: str, address: str) -> CartCheckoutResponse:
+        if account_type != AccountType.CUSTOMER:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không phải là khách hàng')
+        try:
+            async with httpx.AsyncClient() as client:
+                cart_response = await client.post(f"{CART_SERVICE_URL}/cart/checkout", json={
+                    "user_id": user_id,
+                    "full_name": full_name,
+                    "phone_number": phone_number,
+                    "address": address
+                })
+                cart_response.raise_for_status()
+                return CartCheckoutResponse(
+                    id=cart_response.json()["id"],
+                    total_price=cart_response.json()["total_price"],
+                    phone_number=cart_response.json()["phone_number"],
+                    address=cart_response.json()["address"],
+                    status=cart_response.json()["status"],
+                    full_name=cart_response.json()["full_name"],
+                    products=[
+                        ProductInCart(
+                            product_id=product["product_id"],
+                            price=product["price"],
+                            quantity=product["quantity"]
+                        )
+                        for product in cart_response.json()["products"]
+                    ]
+                )
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == status.HTTP_404_NOT_FOUND:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Không có sản phẩm trong giỏ hàng')
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ giỏ hàng')
         except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
             raise HTTPException(status_code=500, detail="Dịch vụ giỏ hàng không khả dụng")
