@@ -10,9 +10,9 @@ from ..models.order_model import OrderModel, OrderStatus
 from ..models.product_order_model import ProductOrderModel
 
 class CartTasks:
-    
+
     @classmethod
-    async def add_product_to_cart_task(cls, async_session: AsyncSession, user_id: int, product_id: str, quantity: int, price) -> AddProductToCartResponse:
+    async def add_product_to_cart_task(cls, async_session: AsyncSession, user_id: int, product_id: str, quantity: int, price: int) -> AddProductToCartResponse:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
         cart_query_result = await async_session.execute(cart_query)
         cart = cart_query_result.scalar()
@@ -27,7 +27,7 @@ class CartTasks:
         if product:
             product.quantity += quantity
         else:
-            product = ProductCartModel(cart_id=cart.id, product_id=product_id, quantity=quantity)
+            product = ProductCartModel(cart_id=cart.id, product_id=product_id, quantity=quantity, price=price)
             async_session.add(product)
         await async_session.commit()
         await async_session.refresh(product)
@@ -37,9 +37,9 @@ class CartTasks:
             quantity=product.quantity,
             price=product.price
         )
-        
-            
-    @classmethod 
+
+
+    @classmethod
     async def remove_product_from_cart_task(cls, async_session: AsyncSession, user_id: int, product_id: str) -> None:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
         cart_query_result = await async_session.execute(cart_query)
@@ -53,7 +53,7 @@ class CartTasks:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không có sản phẩm trong giỏ hàng")
         await async_session.delete(product)
         await async_session.commit()
-        
+
     @classmethod
     async def get_products_in_cart_task(cls, async_session: AsyncSession, user_id: int) -> GetProductsInCartResponse:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
@@ -66,11 +66,11 @@ class CartTasks:
         products = product_query_result.scalars().all()
         return GetProductsInCartResponse(
             products=[
-                ProductInCart(product_id=product.product_id, quantity=product.quantity, price=product.price) 
+                ProductInCart(product_id=product.product_id, quantity=product.quantity, price=product.price)
                 for product in products
             ]
         )
-        
+
     @classmethod
     async def checkout_cart_task(cls, async_session: AsyncSession, user_id: int, phone_number: str, address: str, full_name: str) -> CheckOutCartResponse:
         cart_query = select(CartModel).where(CartModel.user_id == user_id)
@@ -95,7 +95,7 @@ class CartTasks:
         new_order = OrderModel(
             user_id=user_id,
             total_price=total_price,
-            phone_number=phone_number, 
+            phone_number=phone_number,
             address=address,
             full_name=full_name,
             status=OrderStatus.PENDING

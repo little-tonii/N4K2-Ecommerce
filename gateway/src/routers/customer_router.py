@@ -8,8 +8,8 @@ from ..configs.security_guard import verify_access_token
 from ..services.customer_service import CustomerService
 from ..schemas.requests.customer_request_schema import CustomerRegisterRequest, CustomerUpdateInfoRequest
 from ..schemas.responses.customer_response_schema import CustomerRegisterResposne, CustomerUpdateInfoResponse
-from ..schemas.requests.cart_request_schema import AddProductToCartRequest
-from ..schemas.responses.cart_response_schema import AddProductToCartResponse
+from ..schemas.requests.cart_request_schema import AddProductToCartRequest, RemoveProductFromCartRequest
+from ..schemas.responses.cart_response_schema import AddProductToCartResponse, CartResponse
 
 router = APIRouter(prefix='/customer', tags=['Customer'])
 
@@ -29,3 +29,18 @@ async def add_product_to_cart(claims: Annotated[TokenClaims, Depends(verify_acce
         product_id=request.product_id,
         quantity=request.quantity
     )
+
+@router.delete(path='/remove-product-from-cart', status_code=status.HTTP_204_NO_CONTENT)
+async def remove_product_from_cart(
+    claims: Annotated[TokenClaims, Depends(verify_access_token)],
+    request: RemoveProductFromCartRequest
+):
+    return await CustomerService.remove_product_from_cart(
+        user_id=claims.id,
+        product_id=request.product_id,
+        account_type=claims.account_type
+    )
+
+@router.get(path='/get-cart', status_code=status.HTTP_200_OK, response_model=CartResponse)
+async def get_cart(claims: Annotated[TokenClaims, Depends(verify_access_token)]):
+    return await CustomerService.get_cart(user_id=claims.id, account_type=claims.account_type)

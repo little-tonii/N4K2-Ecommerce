@@ -9,7 +9,7 @@ from ..configs.variables import USER_SERVICE_URL
 from ..schemas.responses.customer_response_schema import CustomerRegisterResposne, CustomerUpdateInfoResponse
 from ..services.user_service import bcrypt_context
 from typing import cast
-from ..schemas.responses.cart_response_schema import AddProductToCartResponse
+from ..schemas.responses.cart_response_schema import ProductInCart, CartResponse, AddProductToCartResponse
 from ..configs.variables import PRODUCT_SERVICE_URL, CART_SERVICE_URL
 
 class CustomerService:
@@ -100,6 +100,47 @@ class CustomerService:
                     product_id=added_item["product_id"],
                     quantity=added_item["quantity"],
                     price=added_item["price"]
+                )
+        except httpx.HTTPStatusError:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ giỏ hàng')
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+            raise HTTPException(status_code=500, detail="Dịch vụ giỏ hàng không khả dụng")
+
+    @classmethod
+    async def remove_product_from_cart(cls, account_type: str, user_id: int, product_id: str) -> None:
+        if account_type != AccountType.CUSTOMER:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bạn không phải là khách hàng")
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.delete(f"{CART_SERVICE_URL}/cart/product", json={
+                    "user_id": user_id,
+                    "product_id": product_id
+                })
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == status.HTTP_404_NOT_FOUND:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Sản phẩm không tồn tại trong giỏ hàng')
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ giỏ hàng')
+        except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+            raise HTTPException(status_code=500, detail="Dịch vụ giỏ hàng không khả dụng")
+
+    @classmethod
+    async def get_cart(cls, user_id: int, account_type: str) -> CartResponse:
+        if account_type != AccountType.CUSTOMER:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bạn không phải là khách hàng")
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{CART_SERVICE_URL}/cart/{user_id}")
+                response.raise_for_status()
+                products = response.json()["products"]
+                return CartResponse(
+                    products=[
+                        ProductInCart(
+                            product_id=product["product_id"],
+                            quantity=product["quantity"],
+                            price=product["price"]
+                        )
+                        for product in products
+                    ]
                 )
         except httpx.HTTPStatusError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Có lỗi xảy ra phía dịch vụ giỏ hàng')
