@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Form, UploadFile
 from starlette import status
 
+from ..services.comment_service import CommentService
+
+from ..schemas.requests.comment_request_schema import CommentOnProductRequest
+
 from ..utils.validator import validate_product_name, validate_product_description, validate_product_price, validate_picture
 
 from ..services.product_service import ProductService
@@ -10,6 +14,7 @@ from typing import Annotated
 from ..utils.token_util import TokenClaims
 from ..configs.security_guard import verify_access_token
 from fastapi import Depends
+from ..schemas.responses.comment_response_schema import CommentOnProductResponse, GetCommentsResponse
 
 router = APIRouter(prefix="/product", tags=["Product"])
 
@@ -65,3 +70,19 @@ async def update_product(
         description=request.description,
         category_id=request.category_id
     )
+
+@router.post(path="/{product_id}/comment", status_code=status.HTTP_201_CREATED, response_model=CommentOnProductResponse)
+async def comment_on_product(
+    claims: Annotated[TokenClaims, Depends(verify_access_token)],
+    product_id: str,
+    request: CommentOnProductRequest
+):
+    return await CommentService.create_comment(
+        user_id=claims.id,
+        content=request.content,
+        product_id=product_id
+    )
+
+@router.get(path="/{product_id}/comment", status_code=status.HTTP_200_OK, response_model=GetCommentsResponse)
+async def get_comments(product_id: str):
+    return await CommentService.get_all_comments_by_product_id(product_id=product_id)

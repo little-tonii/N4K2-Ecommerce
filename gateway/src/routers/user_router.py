@@ -1,3 +1,7 @@
+from ..services.comment_service import CommentService
+from ..schemas.requests.comment_request_schema import UpdateCommentRequest
+from ..schemas.responses.comment_response_schema import UpdateCommentResponse, GetCommentsResponse
+
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
@@ -30,3 +34,15 @@ async def change_password(claims: Annotated[TokenClaims, Depends(verify_access_t
 @router.get(path="/user-info", status_code=status.HTTP_200_OK, response_model=UserInfoResponse)
 async def user_info(claims: Annotated[TokenClaims, Depends(verify_access_token)]):
     return await UserService.get_user_info(user_id=claims.id)
+
+@router.patch(path="/comment/{comment_id}", status_code=status.HTTP_200_OK, response_model=UpdateCommentResponse)
+async def update_comment(claims: Annotated[TokenClaims, Depends(verify_access_token)], request: UpdateCommentRequest, comment_id: int):
+    return await CommentService.update_comment(comment_id=comment_id, content=request.content)
+
+@router.delete(path="/comment/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_comment(claims: Annotated[TokenClaims, Depends(verify_access_token)], comment_id: int):
+    await CommentService.delete_comment(comment_id=comment_id)
+
+@router.get(path="/comment", status_code=status.HTTP_200_OK, response_model=GetCommentsResponse)
+async def get_comments(claims: Annotated[TokenClaims, Depends(verify_access_token)]):
+    return await CommentService.get_all_comments_by_user_id(user_id=claims.id)
