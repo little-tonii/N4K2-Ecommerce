@@ -6,7 +6,7 @@ from .configs.exception_handler import global_exception_handler, http_exception_
 from pydantic import ValidationError
 from .configs.database import engine, init_db
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import user_router
+from .routers import user_router, comment_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,10 +23,11 @@ app.add_middleware(
     allow_origins=[],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"], 
+    allow_headers=["*"],
 )
 
 app.include_router(user_router.router)
+app.include_router(comment_router.router)
 
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(ValidationError, validation_exception_handler)
