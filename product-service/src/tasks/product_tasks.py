@@ -4,8 +4,9 @@ from bson import ObjectId
 from fastapi import HTTPException
 from ..models.product_model import ProductModel
 from ..configs.database import product_collection, category_collection
-from ..schemas.product_response_schema import ProductResponse
-
+from ..schemas.product_response_schema import ProductResponse, RecommendationProductResponse
+import httpx
+from transformers import pipeline
 
 class ProductTasks:
     
@@ -27,6 +28,73 @@ class ProductTasks:
             )
         return products
     
+    sentiment_pipeline = pipeline("sentiment-analysis")
+        
+    def score_comment(text: str) -> float:
+        result = sentiment_pipeline(text)[0]
+        label = result["label"]
+        score = result["score"]
+
+        if label == "POSITIVE":
+            if score > 0.9:
+                return 1.5  # so good
+            elif score > 0.75:
+                return 1.0  # good
+            else:
+                return 0.5  # normal
+        else:
+            if score > 0.9:
+                return -1.5  # very bad
+            elif score > 0.75:
+                return -1.0  # bad
+            else:
+                return -0.5  # meh bad
+
+    # Your updated function
+    @classmethod
+    async def get_recommendation_products_task(cls) -> list[RecommendationProductResponse]:
+        products = []
+
+        async with httpx.AsyncClient() as client:
+            async for product in product_collection.find():
+                product_id = str(product["_id"])
+                comment_url = f'http://host.docker.internal:8000/product/{product_id}/comment'
+
+                try:
+                    response = await client.get(comment_url)
+                    if response.status_code == 200:
+                        data = response.json()
+                        comments = data.get("comments", [])
+                    else:
+                        comments = []
+                except Exception as e:
+                    print(f"Error fetching comments for {product_id}: {e}")
+                    comments = []
+
+                # Apply sentiment scoring
+                sentiment_score = 0.0
+                for comment in comments:
+                    comment_score = score_comment(comment["content"])
+                    sentiment_score += comment_score
+
+                products.append(
+                    RecommendationProductResponse(
+                        id=product_id,
+                        name=product["name"],
+                        price=product["price"],
+                        description=product["description"],
+                        category_id=product["category_id"],
+                        image_url=product["image_url"],
+                        created_at=product["created_at"],
+                        updated_at=product["updated_at"],
+                        rate=sentiment_score  # use sentiment as the new "rate"
+                    )
+                )
+
+        sorted_products = sorted(products, key=lambda p: p.rate, reverse=True)
+
+        return sorted_products
+
     @classmethod
     async def create_product_task(cls, name: str, price: int, description: str, category_id: str, image_url: str) -> ProductResponse:
         category = await category_collection.find_one({"_id": ObjectId(category_id)})
@@ -54,23 +122,30 @@ class ProductTasks:
             created_at=new_product.created_at,
             updated_at=new_product.updated_at
         )
-        
+    
     @classmethod
     async def get_product_by_id_task(cls, id: str) -> ProductResponse:
-        product = await product_collection.find_one({"_id": ObjectId(id)})
-        if not product:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sản phẩm không tồn tại")
-        return ProductResponse(
-            id=str(product["_id"]),
-            name=product["name"],
-            price=product["price"],
-            description=product["description"],
-            category_id=product["category_id"],
-            image_url=product["image_url"],
-            created_at=product["created_at"],
-            updated_at=product["updated_at"]
-        )
-        
+        try:
+            object_id = ObjectId(id)
+            product = await product_collection.find_one({"_id": object_id})
+            if not product:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sản phẩm không tồn tại")
+            return ProductResponse(
+                id=str(product["_id"]),
+                name=product["name"],
+                price=product["price"],
+                description=product["description"],
+                category_id=product["category_id"],
+                image_url=product["image_url"],
+                created_at=product["created_at"],
+                updated_at=product["updated_at"]
+            )
+        except bson.errors.InvalidId:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid product ID format"
+            )
+            
     @classmethod
     async def delete_product_by_id_task(cls, id: str) -> None:
         deleted_product = await product_collection.find_one_and_delete({"_id": ObjectId(id)})

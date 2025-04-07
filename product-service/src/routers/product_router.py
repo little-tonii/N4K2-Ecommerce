@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter
 from starlette import status
-from ..schemas.product_response_schema import ProductResponse
+from ..schemas.product_response_schema import ProductResponse, RecommendationProductResponse
 from ..schemas.product_request_shema import CreateProductRequest, UpdateProductRequest
 from ..tasks.product_tasks import ProductTasks
 
@@ -20,6 +20,10 @@ async def create_product(request: CreateProductRequest):
 @router.get(path="/", status_code=status.HTTP_200_OK, response_model=List[ProductResponse])
 async def get_products():
     return await ProductTasks.get_all_products_task()
+
+@router.get(path="/recommendation", status_code=status.HTTP_200_OK, response_model=List[RecommendationProductResponse])
+async def get_recommendation_products():
+    return await ProductTasks.get_recommendation_products_task()
 
 @router.get(path="/{id}", status_code=status.HTTP_200_OK, response_model=ProductResponse)
 async def get_product_by_id(id: str):
